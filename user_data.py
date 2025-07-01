@@ -12,15 +12,13 @@ from googleapiclient.http import MediaIoBaseDownload
 TOKEN_PATH = '../token.pkl'
 UPDATES_PATH = '../updates.pkl'
 DATABASE_PATH = '../databases.pkl'
-FILENAME_USER_DATABASE = 'drivesearch_metadatabase_transformer.pkl'
 
-
-def load_user_specific_database_from_drive(service):
+def load_user_specific_database_from_drive(service, filename_user_database):
     
 
     # Step 1: Find the file by name
     response = service.files().list(
-        q=f"name = '{FILENAME_USER_DATABASE}' and trashed = false",
+        q=f"name = '{filename_user_database}' and trashed = false",
         spaces='drive',
         fields='files(id, name, mimeType)',
         pageSize=1
@@ -48,7 +46,7 @@ def load_user_specific_database_from_drive(service):
         database = pickle.load(fh)
         return database
     except Exception as e:
-        print(f"Failed to unpickle {FILENAME_USER_DATABASE}: {e}")
+        print(f"Failed to unpickle {filename_user_database}: {e}")
         return None
 
 def save_update_store(update_store):
@@ -60,7 +58,10 @@ def save_databases(databases):
         pickle.dump(databases, f)
 
 def get_recent_files(service, since_time):
-    query = f"modifiedTime > '{since_time}' and trashed = false and name != '{FILENAME_USER_DATABASE}'"
+    query = (
+        f"modifiedTime > '{since_time}' and trashed = false and "
+        f"not name contains 'driveresearch_metadatabase'"
+    )
     all_files = []
     page_token = None
     while True:

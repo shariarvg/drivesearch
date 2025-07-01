@@ -10,16 +10,19 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from datetime import datetime, timezone
+import argparse
 
-from search_tools import build_user_specific_tuple_database, random_embedding, sentence_embedding, update_user_specific_tuple_database
+from search_tools import build_user_specific_tuple_database, random_embedding, sentence_embedding, chunk_embedding, update_user_specific_tuple_database
 from database_pickle_tools import upload_pickle_to_drive, database_to_pickle
 
 from user_data import *
 
-TOKEN_PATH = 'token.pkl'
-UPDATES_PATH = 'updates.pkl'
-DATABASE_PATH = 'databases.pkl'
-FILENAME_USER_DATABASE = 'drivesearch_metadatabase_transformer.pkl'
+from functools import partial
+
+
+TOKEN_PATH = '../token.pkl'
+UPDATES_PATH = '../updates.pkl'
+FILENAME_USER_DATABASE = 'drivesearch_metadatabase_chunk.pkl'
 
 def refresh_if_needed(creds):
     if not creds.valid:
@@ -41,7 +44,7 @@ def main():
     update_store = load_update_store()
     #databases = load_databases()
     #print(databases)
-    embedding_method = sentence_embedding
+    embedding_method = partial(chunk_embedding, max_chunks = 10)
     build_method = build_user_specific_tuple_database
     update_method = update_user_specific_tuple_database
 
@@ -51,12 +54,10 @@ def main():
         print(f"Processing user: {username}")
         creds = refresh_if_needed(creds)
         service = build('drive', 'v3', credentials=creds)
-        database = load_user_specific_database_from_drive(service)
-
-
+        database = load_user_specific_database_from_drive(service, FILENAME_USER_DATABASE)
 
         # Use last update time or default to epoch start
-        since_time = update_store.get(username, "2025-06-29T00:00:00Z")
+        since_time = "2025-06-29T00:00:00Z" #update_store.get(username, "2025-06-29T00:00:00Z")
         update_store[username] = datetime.now(timezone.utc).isoformat()
         print(f"Last update time: {since_time}")
 

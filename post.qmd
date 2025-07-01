@@ -15,6 +15,20 @@ format:
 📌 **TL;DR**: I don't really enjoy keyword-based search, which is what I believe Google Drive's native search tool does. Here is my attempt at fixing it.
 :::
 
-## Introduction: Why I don't like Google Drive search
+## Introduction: Why I'm interested in search
 
-yap yap yap
+First things first: Google Drive Search isn't the _worst_ search feature in the world. That award goes to Outlook Search, a feature that always enrages me. I don't want to discredit the SWE's and PM's behind this tool; they are likely very smart, hard-working, and dedicated to shipping a high-quality feature; but every time I'm trying to find an old email, I find myself traversing the depths of my hippocampus to think of unusual keywords that the sender may have included. _Oh that's right, I remembered they wrote 'With warm appreciation', I'll search that up."
+
+Document search is an old problem with no obvious state-of-the-art solution. It's conceptually hard, because it involves storing large pieces of text in small numerical representations, whether that be through count-vectorization or through neural embeddings, and it's executionally hard, because a query's runtime is often dependent on the size of the dataset. Consider the naive approach of iterating over every document in your Google Drive one-by-one to find the one closest to your query along some metric; if your Drive is 14.99 GB in size like mine is, that's not gonna work so well.
+
+I decided to work on search more because I think it's an interesting and open-ended problem, in the direction of what I'm more interested in, which is creating a really good AI-Native Productivity tool. I'm somewhat familiar with Google API and apps from previous projects, and I think that building custom Google Drive document search has a higher upside than an email filter does. 
+
+## The end product
+
+There are two core components to this search tool, a good representation function for my data and an algorithm for finding the document whose representation is closest to some query. Here I assume that the query and the document will be embed with the same function and the optimal search result will minimize the distance between their embeddings. Given that the query will represent much less information than the documents will typically contain, it might make sense to have a larger embedding for each of the documents. For example, having a dimension of the embedding vary with sequence length would allow for this.
+
+I don't want my search tool to download and embed my entire Google Drive each time it is given a search query. Data representation should happen when I authenticate the app the first time, and updates should happen asynchronously. When I enter a search, the only thing that should need to happen is query embedding and comparison.
+
+It made most sense to create a Google Drive app, and this app was not light in credentials. It requires access to see, edit, create, and delete documents in a user's Google Drive, as well as see document metadata and personal user information (email address, just so a unique identifier exists for their credentials to be stored on my end). Google requires several days to verify apps like these, and then pretty much begs end users to use them anyways, which is probably a good privacy practice.
+
+

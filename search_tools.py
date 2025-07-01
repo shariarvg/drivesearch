@@ -6,10 +6,14 @@ from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
 import faiss
 import torch
+import nltk
 
 MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+#nltk.download('punkt')  # only needed once
+#from nltk.tokenize import sent_tokenize
 
-
+def naive_sentence_split(text):
+    return [s.strip() for s in text.split('.') if s.strip()]
 
 '''
 METRICS
@@ -29,6 +33,27 @@ def random_embedding(content):
 def sentence_embedding(text):
     embedding = MODEL.encode(text)
     return embedding
+
+def chunk_embedding(text, max_chunks=None):
+    sentences = naive_sentence_split(text)
+    embeddings = MODEL.encode(sentences)  # shape: (S, D)
+    embeddings = np.array(embeddings)     # ensure it's a NumPy array
+
+    if max_chunks is None or embeddings.shape[0] <= max_chunks:
+        return embeddings
+
+    # Otherwise, group and average
+    S, D = embeddings.shape
+    chunk_size = int(np.ceil(S / max_chunks))
+    reduced_embeddings = []
+
+    for i in range(0, S, chunk_size):
+        group = embeddings[i:i+chunk_size]
+        avg = group.mean(axis=0)
+        reduced_embeddings.append(avg)
+
+    return np.stack(reduced_embeddings)  # shape: (max_chunks, D)
+
 
 '''
 DATABASE
@@ -76,27 +101,60 @@ def execute_search(service, find_method, database, query_embedding):
     return get_specific_files_metadata(service, file_ids)
 
 def get_embeddings_from_database(database):
-    def access_numpy(tensor_or_np_vec):
-        if isinstance(tensor_or_np_vec, torch.Tensor):
-            return tensor_or_np_vec.cpu().numpy()
-        return tensor_or_np_vec
+    all_embeddings = []
+    index_to_doc = []
 
-    return np.vstack([access_numpy(a[1]) for a in database])
+    for doc_id, mat in database:
+        mat_np = mat.cpu().numpy() if isinstance(mat, torch.Tensor) else mat
+        all_embeddings.append(mat_np)
+
+        for i in range(mat_np.shape[0]):
+            index_to_doc.append((doc_id, i))
+
+    stacked_embeddings = np.vstack(all_embeddings)
+    return stacked_embeddings, index_to_doc
+
 
 def establish_faiss(database):
+    """
+    Input:
+        database: List of (doc_id, embedding_matrix), where embedding_matrix has shape (S_i, D)
+    Returns:
+        stacked_embeddings: np.ndarray of shape (total_sentences, D)
+        index_to_doc: list of (doc_id, sentence_index) for each row in stacked_embeddings
+    """
     ids = [a[0] for a in database]
-    embeddings = get_embeddings_from_database(database)
+    embeddings, index_to_doc = get_embeddings_from_database(database)
     print(embeddings.shape)
     faiss.normalize_L2(embeddings)
     index = faiss.IndexFlatIP(embeddings.shape[1])
     index.add(embeddings)
-    return ids, index
+    return index_to_doc, index
 
-def search_against_faiss(query_embedding, database, k = 1):
-    '''
-    query_embedding: torch tensor of shape (D,)
-    database: list of (file_id, torch tensor)
-    '''
-    ids, index = establish_faiss(database)
-    D, I = index.search(query_embedding[np.newaxis, :], k)
-    return [ids[i] for i in I[0]]
+def search_against_faiss(query_embedding, database, k=1):
+    """
+    query_embedding: np.ndarray or torch.Tensor of shape (D,)
+    database: list of (doc_id, embedding_matrix)
+    Returns: list of top-k unique doc_ids based on closest chunks
+    """
+    index_to_doc, index = establish_faiss(database)
+
+    if isinstance(query_embedding, torch.Tensor):
+        query_embedding = query_embedding.cpu().numpy()
+    query_embedding = query_embedding.reshape(1, -1)
+
+    faiss.normalize_L2(query_embedding)
+    D, I = index.search(query_embedding, 10 * k)  # search more to ensure uniqueness
+
+    seen = set()
+    top_k_docs = []
+
+    for i in I[0]:
+        doc_id = index_to_doc[i][0]
+        if doc_id not in seen:
+            seen.add(doc_id)
+            top_k_docs.append(doc_id)
+        if len(top_k_docs) == k:
+            break
+
+    return top_k_docs
