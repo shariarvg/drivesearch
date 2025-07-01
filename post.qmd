@@ -1,0 +1,20 @@
+---
+title: "Building a semantic search tool for my Google Drive"
+author: "Shariar Vaez-Ghaemi"
+date: "2025-07-01"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-tools: true
+    include-in-header: ref_to_custom_css.html
+---
+
+::: {.tldr}
+📌 **TL;DR**: I don't really enjoy keyword-based search, which is what I believe Google Drive's native search tool does. Here is my attempt at fixing it.
+:::
+
+## Introduction: Why I don't like Google Drive search
+
+yap yap yap
