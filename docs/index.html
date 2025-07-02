@@ -149,6 +149,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#introduction-why-im-interested-in-search" id="toc-introduction-why-im-interested-in-search" class="nav-link active" data-scroll-target="#introduction-why-im-interested-in-search">Introduction: Why I’m interested in search</a></li>
   <li><a href="#the-end-product" id="toc-the-end-product" class="nav-link" data-scroll-target="#the-end-product">The end product</a></li>
+  <li><a href="#implementation-1-similarity-search-on-sentence-embeddings" id="toc-implementation-1-similarity-search-on-sentence-embeddings" class="nav-link" data-scroll-target="#implementation-1-similarity-search-on-sentence-embeddings">Implementation 1: Similarity Search on Sentence Embeddings</a></li>
+  <li><a href="#evals-and-hypothetical-benchmarks" id="toc-evals-and-hypothetical-benchmarks" class="nav-link" data-scroll-target="#evals-and-hypothetical-benchmarks">Evals and hypothetical benchmarks</a>
+  <ul class="collapse">
+  <li><a href="#synthetic-dataset-generation" id="toc-synthetic-dataset-generation" class="nav-link" data-scroll-target="#synthetic-dataset-generation">Synthetic Dataset Generation</a></li>
+  <li><a href="#real-datasets-and-the-ground-truth-problem" id="toc-real-datasets-and-the-ground-truth-problem" class="nav-link" data-scroll-target="#real-datasets-and-the-ground-truth-problem">Real datasets (and the ground truth problem)</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -200,10 +206,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>There are two core components to this search tool, a good representation function for my data and an algorithm for finding the document whose representation is closest to some query. Here I assume that the query and the document will be embed with the same function and the optimal search result will minimize the distance between their embeddings. Given that the query will represent much less information than the documents will typically contain, it might make sense to have a larger embedding for each of the documents. For example, having a dimension of the embedding vary with sequence length would allow for this.</p>
 <p>I don’t want my search tool to download and embed my entire Google Drive each time it is given a search query. Data representation should happen when I authenticate the app the first time, and updates should happen asynchronously. When I enter a search, the only thing that should need to happen is query embedding and comparison.</p>
 <p>It made most sense to create a Google Drive app, and this app was not light in credentials. It requires access to see, edit, create, and delete documents in a user’s Google Drive, as well as see document metadata and personal user information (email address, just so a unique identifier exists for their credentials to be stored on my end). Google requires several days to verify apps like these, and then pretty much begs end users to use them anyways, which is probably a good privacy practice.</p>
+</section>
+<section id="implementation-1-similarity-search-on-sentence-embeddings" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-1-similarity-search-on-sentence-embeddings">Implementation 1: Similarity Search on Sentence Embeddings</h2>
+<p>In my <a href="https://shariarvg.github.io/recurring_features/">last post</a>, I used <a href="https://github.com/facebookresearch/faiss">FAISS</a> as a method of efficiently searching for similar features by matching decoder weights. Since it was fresh in my mind, I thought why not start out with it. Since we’re working with documents here, I decided to use <a href="https://sbert.net/">sentence transformers</a> instead of regular transformers; sentence transformers are designed to perform well at semantic search, clustering, and information retrieval.</p>
+</section>
+<section id="evals-and-hypothetical-benchmarks" class="level2">
+<h2 class="anchored" data-anchor-id="evals-and-hypothetical-benchmarks">Evals and hypothetical benchmarks</h2>
+<section id="synthetic-dataset-generation" class="level3">
+<h3 class="anchored" data-anchor-id="synthetic-dataset-generation">Synthetic Dataset Generation</h3>
+<p>We need to obtain a document corpus and a set of queries to pass into that document corpus. A good first pass solution is to make a synthetic benchmark, because we can control ground truth instead of having to compute it. The heavy-lifting in any of these approaches will be done with an LLM.</p>
+<p>In a first-pass approach, we can generate borrow intuition from the ancient topic modeling literature. Here, we’ll generate a list of non-overlapping topics or themes, with some degree of specifity (e.g.&nbsp;“Reviews of classical literature from the 20th century”, “History of the two-party system”, “Apartment hunting in Chicago.” I prompted ChatGPT to come up with some more, and it generated: Travel Planning and Reviews, Educational Essays and Notes, Personal Finance and Budgeting, Creative Writing and Fiction… Definitely want some more specific topics than these, but this was more a result of my lazy prompting.</p>
+<p>From there, we prompt an LLM to generate 3-5 documents of length 100-500 words for each topic, and build our corpus as such. After this, we also ask the LLM to generate 3-5 queries of length 5-20 words for each topic.</p>
+</section>
+<section id="real-datasets-and-the-ground-truth-problem" class="level3">
+<h3 class="anchored" data-anchor-id="real-datasets-and-the-ground-truth-problem">Real datasets (and the ground truth problem)</h3>
+<p>It seems necessary that any high-quality benchmark have a real data component in addition to the synthetic data component. If we are going with real data, how are we going to get ground truth? Assuming the corpus and query set already exists, a benchmark can be created by employing some extremely time-consuming but high-fidelity search approach; it’s not hard to think of high-quality search tactics that are impractical because of their slow runtime. These approaches can be applied to benchmark creation.</p>
+<p>Here’s an example approach for a real document and set of queries: for each query, iterate over the entire corpus and ask an LLM whether the document is relevant to that query. Once we’ve filtered down the corpus to only the documents that are relevant to the query, we can pass the entire sub-corpus into an LLM and ask it to find the documents that are most relevant. This can be considered a ground-truth set of search results.</p>
 
 
 <!-- -->
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -689,7 +713,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>I don't want my search tool to download and embed my entire Google Drive each time it is given a search query. Data representation should happen when I authenticate the app the first time, and updates should happen asynchronously. When I enter a search, the only thing that should need to happen is query embedding and comparison.</span>
 <span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>It made most sense to create a Google Drive app, and this app was not light in credentials. It requires access to see, edit, create, and delete documents in a user's Google Drive, as well as see document metadata and personal user information (email address, just so a unique identifier exists for their credentials to be stored on my end). Google requires several days to verify apps like these, and then pretty much begs end users to use them anyways, which is probably a good privacy practice.</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">## Implementation 1: Similarity Search on Sentence Embeddings</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>In my <span class="co">[</span><span class="ot">last post</span><span class="co">](https://shariarvg.github.io/recurring_features/)</span>, I used <span class="co">[</span><span class="ot">FAISS</span><span class="co">](https://github.com/facebookresearch/faiss)</span> as a method of efficiently searching for similar features by matching decoder weights. Since it was fresh in my mind, I thought why not start out with it. Since we're working with documents here, I decided to use <span class="co">[</span><span class="ot">sentence transformers</span><span class="co">](https://sbert.net/)</span> instead of regular transformers; sentence transformers are designed to perform well at semantic search, clustering, and information retrieval. </span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="fu">## Evals and hypothetical benchmarks</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">### Synthetic Dataset Generation</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>We need to obtain a document corpus and a set of queries to pass into that document corpus. A good first pass solution is to make a synthetic benchmark, because we can control ground truth instead of having to compute it. The heavy-lifting in any of these approaches will be done with an LLM.</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>In a first-pass approach, we can generate borrow intuition from the ancient topic modeling literature. Here, we'll generate a list of non-overlapping topics or themes, with some degree of specifity (e.g. "Reviews of classical literature from the 20th century", "History of the two-party system", "Apartment hunting in Chicago." I prompted ChatGPT to come up with some more, and it generated: Travel Planning and Reviews, Educational Essays and Notes, Personal Finance and Budgeting, Creative Writing and Fiction... Definitely want some more specific topics than these, but this was more a result of my lazy prompting.</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>From there, we prompt an LLM to generate 3-5 documents of length 100-500 words for each topic, and build our corpus as such. After this, we also ask the LLM to generate 3-5 queries of length 5-20 words for each topic. </span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="fu">### Real datasets (and the ground truth problem)</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>It seems necessary that any high-quality benchmark have a real data component in addition to the synthetic data component. If we are going with real data, how are we going to get ground truth? Assuming the corpus and query set already exists, a benchmark can be created by employing some extremely time-consuming but high-fidelity search approach; it's not hard to think of high-quality search tactics that are impractical because of their slow runtime. These approaches can be applied to benchmark creation.</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>Here's an example approach for a real document and set of queries: for each query, iterate over the entire corpus and ask an LLM whether the document is relevant to that query. Once we've filtered down the corpus to only the documents that are relevant to the query, we can pass the entire sub-corpus into an LLM and ask it to find the documents that are most relevant. This can be considered a ground-truth set of search results.</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
