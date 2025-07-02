@@ -19,6 +19,8 @@ from user_data import *
 
 from functools import partial
 
+from flask import request
+
 
 TOKEN_PATH = '../token.pkl'
 UPDATES_PATH = '../updates.pkl'
@@ -39,7 +41,9 @@ def update_database_new_files(username, files, service, embedding_method, databa
     else:
         return update_method(files, service, database, embedding_method)
 
-def main():
+def update():
+    username = request.username
+
     token_store = load_token_store()
     update_store = load_update_store()
     #databases = load_databases()
@@ -70,9 +74,10 @@ def main():
     save_update_store(update_store)
     #save_databases(databases)
 
-    return results
-
+    #return results
+'''
 if __name__ == "__main__":
     updated_files = main()
     for user, files in updated_files.items():
         print(f"\nUser: {user}\nUpdated File IDs: {files}")
+'''
