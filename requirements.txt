@@ -6,3 +6,4 @@ torch
 numpy
 nltk
 gunicorn
+google_auth_oauthlib

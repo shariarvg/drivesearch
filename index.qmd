@@ -31,18 +31,22 @@ I don't want my search tool to download and embed my entire Google Drive each ti
 
 It made most sense to create a Google Drive app, and this app was not light in credentials. It requires access to see, edit, create, and delete documents in a user's Google Drive, as well as see document metadata and personal user information (email address, just so a unique identifier exists for their credentials to be stored on my end). Google requires several days to verify apps like these, and then pretty much begs end users to use them anyways, which is probably a good privacy practice.
 
+## Implementation 1: Similarity Search on Sentence Embeddings
+
+In my [last post](https://shariarvg.github.io/recurring_features/), I used [FAISS](https://github.com/facebookresearch/faiss) as a method of efficiently searching for similar features by matching decoder weights. Since it was fresh in my mind, I thought why not start out with it. Since we're working with documents here, I decided to use [sentence transformers](https://sbert.net/) instead of regular transformers; sentence transformers are designed to perform well at semantic search, clustering, and information retrieval. 
+
 ## Evals and hypothetical benchmarks
 
 ### Synthetic Dataset Generation
 
 We need to obtain a document corpus and a set of queries to pass into that document corpus. A good first pass solution is to make a synthetic benchmark, because we can control ground truth instead of having to compute it. The heavy-lifting in any of these approaches will be done with an LLM.
 
-In a first-pass approach, we can generate borrow intuition from the ancient topic modeling literature. Here, we'll generate a list of non-overlapping topics or themes, with some degree of specifity (e.g. "Reviews of classical literature from the 20th century", "History of the two-party system", "Apartment hunting in Chicago." I prompted ChatGPT to come up with some more, and it generated: Travel Planning and Reviews, Educational Essays and Notes, Personal Finance and Budgeting, Creative Writing and Fiction... Pretty meh, would encourage anyone building out this benchmark to push for some more specificity through prompting.
+In a first-pass approach, we can generate borrow intuition from the ancient topic modeling literature. Here, we'll generate a list of non-overlapping topics or themes, with some degree of specifity (e.g. "Reviews of classical literature from the 20th century", "History of the two-party system", "Apartment hunting in Chicago." I prompted ChatGPT to come up with some more, and it generated: Travel Planning and Reviews, Educational Essays and Notes, Personal Finance and Budgeting, Creative Writing and Fiction... Definitely want some more specific topics than these, but this was more a result of my lazy prompting.
 
 From there, we prompt an LLM to generate 3-5 documents of length 100-500 words for each topic, and build our corpus as such. After this, we also ask the LLM to generate 3-5 queries of length 5-20 words for each topic. 
 
 
-### Ground truth
+### Real datasets (and the ground truth problem)
 
 It seems necessary that any high-quality benchmark have a real data component in addition to the synthetic data component. If we are going with real data, how are we going to get ground truth? Assuming the corpus and query set already exists, a benchmark can be created by employing some extremely time-consuming but high-fidelity search approach; it's not hard to think of high-quality search tactics that are impractical because of their slow runtime. These approaches can be applied to benchmark creation.
 
