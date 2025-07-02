@@ -14,7 +14,7 @@ The following code defines the sidebar, which is where code will typically get s
 
 <pre lang = 'markdown'>
 
-<!DOCTYPE html>
+```<!DOCTYPE html>
 <html>
   <head>
     <base target="_top">
@@ -61,7 +61,7 @@ The following code defines the sidebar, which is where code will typically get s
     </script>
   </body>
 </html>
-
+```
 </pre>
 
 Below, I paste in the Code.gs file that's also necessary for a Google app.
