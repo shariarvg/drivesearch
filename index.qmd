@@ -31,4 +31,8 @@ I don't want my search tool to download and embed my entire Google Drive each ti
 
 It made most sense to create a Google Drive app, and this app was not light in credentials. It requires access to see, edit, create, and delete documents in a user's Google Drive, as well as see document metadata and personal user information (email address, just so a unique identifier exists for their credentials to be stored on my end). Google requires several days to verify apps like these, and then pretty much begs end users to use them anyways, which is probably a good privacy practice.
 
+## Evals and hypothetical benchmarks
 
+How can someone compare two search functions against each other? Any benchmark would require not only a (synthetic or real) document corpus and set of queries, but also a ground truth document for each query. Assuming the corpus and query set already exists, a benchmark can be created by employing some extremely time-consuming but high-fidelity search approach; it's not hard to think of high-quality search tactics that are impractical because of their slow runtime. These approaches can be applied to benchmark creation.
+
+One example I can think 

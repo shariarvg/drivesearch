@@ -1,7 +1,6 @@
 # app.py
 
 from flask import Flask
-from auth_routes import authorize_route, oauth2callback_route
 from query_routes import search_route
 from get_credentials import get_and_write_creds
 from update import update
