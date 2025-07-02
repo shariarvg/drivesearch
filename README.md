@@ -14,7 +14,7 @@ The following code defines the sidebar, which is where code will typically get s
 
 <pre lang = 'markdown'>
 
-```<!DOCTYPE html>
+```html <!DOCTYPE html>
 <html>
   <head>
     <base target="_top">
