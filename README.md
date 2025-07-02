@@ -66,7 +66,7 @@ The following code defines the sidebar, which is where code will typically get s
 
 Below, I paste in the Code.gs file that's also necessary for a Google app.
 
-<pre lang = 'markdown'>
+<pre lang = 'markdown'>```javascript
 function onOpen() {
   DocumentApp.getUi()
     .createMenu('Drive Search')
@@ -97,13 +97,13 @@ function searchDriveSemantically(query) {
 
   const result = JSON.parse(response.getContentText());
   return result;
-}
+}```
 
 </pre>
 
 Finally, the appsscript.json 
 
-<pre lang = 'markdown'>
+<pre lang = 'markdown'>```json
 {
   "timeZone": "America/New_York",
   "exceptionLogging": "STACKDRIVER",
@@ -112,5 +112,5 @@ Finally, the appsscript.json
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/script.container.ui"
   ]
-}
+}```
 </pre>
