@@ -33,6 +33,19 @@ It made most sense to create a Google Drive app, and this app was not light in c
 
 ## Evals and hypothetical benchmarks
 
-How can someone compare two search functions against each other? Any benchmark would require not only a (synthetic or real) document corpus and set of queries, but also a ground truth document for each query. Assuming the corpus and query set already exists, a benchmark can be created by employing some extremely time-consuming but high-fidelity search approach; it's not hard to think of high-quality search tactics that are impractical because of their slow runtime. These approaches can be applied to benchmark creation.
+### Synthetic Dataset Generation
 
-One example I can think 
+We need to obtain a document corpus and a set of queries to pass into that document corpus. A good first pass solution is to make a synthetic benchmark, because we can control ground truth instead of having to compute it. The heavy-lifting in any of these approaches will be done with an LLM.
+
+In a first-pass approach, we can generate borrow intuition from the ancient topic modeling literature. Here, we'll generate a list of non-overlapping topics or themes, with some degree of specifity (e.g. "Reviews of classical literature from the 20th century", "History of the two-party system", "Apartment hunting in Chicago." I prompted ChatGPT to come up with some more, and it generated: Travel Planning and Reviews, Educational Essays and Notes, Personal Finance and Budgeting, Creative Writing and Fiction... Pretty meh, would encourage anyone building out this benchmark to push for some more specificity through prompting.
+
+From there, we prompt an LLM to generate 3-5 documents of length 100-500 words for each topic, and build our corpus as such. After this, we also ask the LLM to generate 3-5 queries of length 5-20 words for each topic. 
+
+
+### Ground truth
+
+It seems necessary that any high-quality benchmark have a real data component in addition to the synthetic data component. If we are going with real data, how are we going to get ground truth? Assuming the corpus and query set already exists, a benchmark can be created by employing some extremely time-consuming but high-fidelity search approach; it's not hard to think of high-quality search tactics that are impractical because of their slow runtime. These approaches can be applied to benchmark creation.
+
+Here's an example approach for a real document and set of queries: for each query, iterate over the entire corpus and ask an LLM whether the document is relevant to that query. Once we've filtered down the corpus to only the documents that are relevant to the query, we can pass the entire sub-corpus into an LLM and ask it to find the documents that are most relevant. This can be considered a ground-truth set of search results.
+
+

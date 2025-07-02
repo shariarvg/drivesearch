@@ -1,10 +1,10 @@
 # app.py
 
 from flask import Flask
-from query_routes import search_route
 from get_credentials import get_and_write_creds
 from update import update
 from query_app import search
+import os
 
 app = Flask(__name__)
 app.secret_key = os.environ['APP_SECRET_KEY']
