@@ -73,11 +73,11 @@ def build_user_specific_tuple_database(files, service, embedding_method):
 def update_user_specific_tuple_database(new_files, service, database, embedding_method):
     existing_ids = [a[0] for a in database]
     for file in new_files:
-        file_id, file_name, mime_type, content = extract_file(file, service, verbose = True)
+        file_id, file_name, mime_type, content, modified_time = extract_file(file, service, verbose = True)
         if file_id in existing_ids:
-            database[existing_ids.index(file_id)] = (file_id, embedding_method(content))
-        else:
-            database.append((file_id, embedding_method(content)))
+            database[existing_ids.index(file_id)] = (file_id, embedding_method(content), modified_time, file_name)
+        elif file_id is not None:
+            database.append((file_id, embedding_method(content), modified_time, file_name))
 
     return database
 
@@ -104,7 +104,9 @@ def get_embeddings_from_database(database):
     all_embeddings = []
     index_to_doc = []
 
-    for doc_id, mat in database:
+    for ele in database:
+        doc_id = ele[0]
+        mat = ele[1]
         mat_np = mat.cpu().numpy() if isinstance(mat, torch.Tensor) else mat
         all_embeddings.append(mat_np)
 

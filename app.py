@@ -15,3 +15,7 @@ app.add_url_rule('/oauth2callback', view_func=update)
 
 # Query endpoint
 app.add_url_rule('/search', view_func=search, methods=["POST"])
+
+@app.route("/")
+def home():
+    return "✅ Flask server is running. Available routes: /authorize, /search"
