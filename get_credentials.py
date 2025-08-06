@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 import numpy as np
 import pickle
 from google.auth.transport.requests import Request
+from flask import redirect
 import os
 
 def get_and_write_creds():
@@ -14,22 +15,13 @@ def get_and_write_creds():
         'openid'
     ] 
 
+    print("get_and_write_creds called")
+
     #if creds is not None:
     #    return creds
 
-    client_config = {
-        "installed": {
-            "client_id": os.environ['client_id'],
-            "project_id": os.environ['project_id'],
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_secret": os.environ['client_secret'],
-            "redirect_uris": ["https://drivesearch.onrender.com"]
-        }
-    }
-
-    flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
+    flow = InstalledAppFlow.from_client_secrets_file(
+        '../credentials_api.json', SCOPES)
 
     # This opens a browser window for the user to log in and approve
     creds = flow.run_local_server(port=8080, access_type = 'offline', prompt = 'consent')
@@ -49,7 +41,7 @@ def get_and_write_creds():
     with open(TOKEN_FILE, 'wb') as f:
         pickle.dump(token_store, f)
 
-    return creds, username
+    return redirect("/")#creds, username
 
 def get_google_drive_api(creds):
     service = build('drive', 'v3', credentials=creds)

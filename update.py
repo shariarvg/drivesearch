@@ -75,9 +75,8 @@ def update():
     #save_databases(databases)
 
     #return results
-'''
+
 if __name__ == "__main__":
-    updated_files = main()
-    for user, files in updated_files.items():
-        print(f"\nUser: {user}\nUpdated File IDs: {files}")
-'''
+    updated_files = update()
+    #for user, files in updated_files.items():
+    #  print(f"\nUser: {user}\nUpdated File IDs: {files}")

@@ -15,6 +15,8 @@ format:
 📌 **TL;DR**: I don't really enjoy keyword-based search, which is what I believe Google Drive's native search tool does. Here is my attempt at fixing it.
 :::
 
+![How drivesearch appears](screenshot_docs_search)
+
 ## Introduction: Why I'm interested in search
 
 First things first: Google Drive Search isn't the _worst_ search feature in the world. That award goes to Outlook Search, a feature that always enrages me. I don't want to discredit the SWE's and PM's behind this tool; they are likely very smart, hard-working, and dedicated to shipping a high-quality feature; but every time I'm trying to find an old email, I find myself traversing the depths of my hippocampus to think of unusual keywords that the sender may have included. _Oh that's right, I remembered they wrote 'With warm appreciation', I'll search that up."
@@ -31,7 +33,7 @@ I don't want my search tool to download and embed my entire Google Drive each ti
 
 It made most sense to create a Google Drive app, and this app was not light in credentials. It requires access to see, edit, create, and delete documents in a user's Google Drive, as well as see document metadata and personal user information (email address, just so a unique identifier exists for their credentials to be stored on my end). Google requires several days to verify apps like these, and then pretty much begs end users to use them anyways, which is probably a good privacy practice.
 
-## Implementation 1: Similarity Search on Sentence Embeddings
+## Implementation: Similarity Search on Sentence Embeddings
 
 In my [last post](https://shariarvg.github.io/recurring_features/), I used [FAISS](https://github.com/facebookresearch/faiss) as a method of efficiently searching for similar features by matching decoder weights. Since it was fresh in my mind, I thought why not start out with it. Since we're working with documents here, I decided to use [sentence transformers](https://sbert.net/) instead of regular transformers; sentence transformers are designed to perform well at semantic search, clustering, and information retrieval. 
 

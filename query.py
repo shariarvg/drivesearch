@@ -19,9 +19,10 @@ def return_file_ids(username, query, k):
 
     token_store = load_token_store()
 
-    creds = token_store[args.username]
+    creds = token_store[username]
     service = build('drive', 'v3', credentials=creds)
     database = load_user_specific_database_from_drive(service, FILENAME_USER_DATABASE)
-    file_ids = search_against_faiss(query_embedding, database, args.k)
+    print(database)
+    file_ids = search_against_faiss(query_embedding, database, k)
 
-    return get_specific_files_metadata(service, file_ids)
+    return get_specific_files_metadata(service, file_ids, database)

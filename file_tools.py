@@ -1,17 +1,29 @@
 from googleapiclient.http import MediaIoBaseDownload
 import io
+from datetime import datetime
 
 def extract_file(file, service, verbose = False):
     file_id = file['id']
     file_name = file['name']
     mime_type = file['mimeType']
+    modified_time_raw = file.get('modifiedTime', None)
+
+    modified_time = None
+    if modified_time_raw:
+        try:
+            modified_dt = datetime.fromisoformat(modified_time_raw.rstrip("Z"))
+            modified_time = modified_dt.strftime("%Y-%m-%d")
+        except ValueError:
+            modified_time = "Invalid Date"
 
     if verbose:
         print(f"Downloading: {file_name} ({mime_type})")
 
     # 2. Skip folders or non-downloadable files
+    print(mime_type)
     if mime_type != 'application/vnd.google-apps.document':  # or 'text/plain', etc.
-        return None, None, None, None
+        print("EARLY")
+        return None, None, None, None, None
 
     # 3. Download file content
     request = service.files().export_media(
@@ -28,21 +40,22 @@ def extract_file(file, service, verbose = False):
     fh.seek(0)
     content = fh.read().decode('utf-8')  # or 'utf-16' depending on encoding
 
-    return file_id, file_name, mime_type, content
+    return file_id, file_name, mime_type, file_name + "\n" + content, modified_time
 
 def get_k_files_metadata(service, k = 10):
     results = service.files().list(pageSize=10, fields="files(id, name, mimeType)").execute()
     files = results.get('files', [])
     return results, files
 
-def get_specific_files_metadata(service, file_ids, mimeType = True):
+def get_specific_files_metadata(service, file_ids, database = None, mimeType = True):
     file_metadata = []
     for fid in file_ids:
         try:
-            if mimeType:
-                f = service.files().get(fileId=fid, fields='id, name, mimeType').execute()
+            if database is not None:
+                f = [d for d in database if d[0]==fid][0]
+                f = {'id':f[0], 'modifiedTime':f[2], 'name':f[3]}
             else:
-                f = service.files().get(fileId=fid, fields='id, name').execute()
+                f = service.files().get(fileId=fid, fields='id, name, modifiedTime,name').execute()
             file_metadata.append(f)
         except Exception as e:
             print(f"Failed to get file {fid}: {e}")

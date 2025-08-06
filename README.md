@@ -114,3 +114,13 @@ Finally, the appsscript.json
   ]
 }```
 </pre>
+
+## Deploying the app
+
+This app is ready to be deployed. Make sure you have all the requirements in requirements.txt installed, then call the following command.
+
+<pre lang = "markdown">
+```bash
+gunicorn app:app --bind 0.0.0.0:$PORT
+```
+</ore>
